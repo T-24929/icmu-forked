@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ICMU Scan Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background: #000; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        .status-header { position: absolute; top: 20px; font-size: 12px; letter-spacing: 2px; color: #1ca65a; font-weight: 700; }
+        #display-card { background: #111; border: 2px solid #1ca65a; border-radius: 30px; padding: 40px; width: 600px; text-align: center; transition: 0.5s; opacity: 0; transform: translateY(20px); }
+        #display-card.active { opacity: 1; transform: translateY(0); }
+        .label { color: #888; font-size: 14px; font-weight: 700; text-transform: uppercase; margin-top: 20px; }
+        .value { font-size: 42px; font-weight: 800; margin-bottom: 10px; }
+        .reg-value { color: #1ca65a; font-size: 28px; }
+        #waiting-msg { font-size: 24px; color: #444; font-weight: 700; text-transform: uppercase; }
+        .success-pulse { animation: pulse 0.5s ease-out; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(28, 166, 90, 0.7); } 100% { box-shadow: 0 0 0 30px rgba(28, 166, 90, 0); } }
+    </style>
+</head>
+<body>
+    <div class="status-header">ICMU LIVE SCANNER CONNECTED</div>
+    <div id="waiting-msg">Ready to Scan...</div>
+    <div id="display-card">
+        <div class="label">Member Name</div>
+        <div id="disp-name" class="value">---</div>
+        <div class="label">Registration No</div>
+        <div id="disp-reg" class="value reg-value">---</div>
+        <div class="label">Index Number</div>
+        <div id="disp-index" class="value">---</div>
+    </div>
+
+<script>
+    // 1. Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyABiLBG8RUyJtpHebMlWHejr7Xgzysrwlw",
+      authDomain: "icmu-scanner.firebaseapp.com",
+      databaseURL: "https://icmu-scanner-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "icmu-scanner",
+      storageBucket: "icmu-scanner.firebasestorage.app",
+      messagingSenderId: "769430973149",
+      appId: "1:769430973149:web:80effee020d19dc0964934"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. Member Database from Google Sheets
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTm2fWeo6R07EnowHGZgYFpYc4_ovvzSHYneP398bCp8gv8htAt_i81ySuuUFy1Y8GEXiwcTTGJvGX0/pub?gid=1318759872&single=true&output=csv";
+    let memberData = [];
+
+    async function loadMembers() {
+        try {
+            const response = await fetch(SHEET_CSV_URL);
+            const text = await response.text();
+            // Basic CSV parsing logic
+            const lines = text.replace(/\r/g, "").split('\n').filter(l => l.trim() !== '').map(l => l.split(','));
+            const headers = lines[0].map(h => h.trim().toLowerCase());
+            
+            // Adjust these names if your Google Sheet headers are different
+            const iN = headers.indexOf("name"), iI = headers.indexOf("index no"), iR = headers.indexOf("reg no");
+            
+            memberData = lines.slice(1).map(cols => ({
+                name: cols[iN]?.trim(),
+                index: cols[iI]?.trim(),
+                reg: cols[iR]?.trim()
+            }));
+            console.log("Database Loaded: " + memberData.length + " members.");
+        } catch (e) { console.error("Data load failed", e); }
+    }
+
+    // 3. Listen for scans from Mobile
+    db.ref('last_scan').on('value', (snapshot) => {
+        const scannedID = snapshot.val();
+        if (scannedID) {
+            const member = memberData.find(m => m.reg === scannedID || m.index === scannedID);
+            const card = document.getElementById('display-card');
+            const waitMsg = document.getElementById('waiting-msg');
+
+            if (member) {
+                document.getElementById('disp-name').innerText = member.name.toUpperCase();
+                document.getElementById('disp-reg').innerText = member.reg;
+                document.getElementById('disp-index').innerText = member.index;
+                
+                waitMsg.style.display = 'none';
+                card.classList.add('active');
+                card.classList.add('success-pulse');
+                setTimeout(() => card.classList.remove('success-pulse'), 500);
+            } else {
+                console.log("Unknown Member ID: " + scannedID);
+            }
+        }
+    });
+
+    loadMembers();
+</script>
+</body>
+</html>

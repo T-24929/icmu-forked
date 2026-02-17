@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICMU Mobile Scanner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background: #1a1a1a; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; }
+        .header { background: #1ca65a; width: 100%; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        #reader { width: 90%; max-width: 400px; margin-top: 30px; border-radius: 20px; overflow: hidden; border: 4px solid #333; }
+        #result-popup { position: fixed; bottom: 30px; background: #1ca65a; padding: 15px 30px; border-radius: 50px; font-weight: 700; transform: translateY(100px); transition: 0.4s; opacity: 0; z-index: 1000; }
+        #result-popup.show { transform: translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="header"><h1>ICMU GATE SCANNER</h1></div>
+    <div id="reader"></div>
+    <div id="result-popup">SCANNED SUCCESSFULLY</div>
+
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyABiLBG8RUyJtpHebMlWHejr7Xgzysrwlw",
+      authDomain: "icmu-scanner.firebaseapp.com",
+      databaseURL: "https://icmu-scanner-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "icmu-scanner",
+      storageBucket: "icmu-scanner.firebasestorage.app",
+      messagingSenderId: "769430973149",
+      appId: "1:769430973149:web:80effee020d19dc0964934"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function onScanSuccess(decodedText) {
+        // Send Registration No to PC Dashboard via Firebase
+        db.ref('last_scan').set(decodedText);
+        
+        // Vibrate phone
+        if (navigator.vibrate) navigator.vibrate(100);
+        
+        // Visual alert
+        const popup = document.getElementById('result-popup');
+        popup.innerText = "SCANNED: " + decodedText;
+        popup.classList.add('show');
+        setTimeout(() => popup.classList.remove('show'), 2000);
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+</body>
+</html>
