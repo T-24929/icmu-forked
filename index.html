@@ -3,27 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <title>ICMU | Isipathana College Media Unit</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; background: #0a0c0b; color: #fff; font-family: 'Montserrat', sans-serif; scroll-behavior: smooth; }
-        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: rgba(0,0,0,0.9); position: fixed; width: 90%; z-index: 100; backdrop-filter: blur(10px); }
-        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: radial-gradient(circle at center, #132119 0%, #0a0c0b 100%); }
-        .hero h1 { font-size: 72px; font-weight: 800; margin: 0; animation: fadeInUp 1s ease; }
-        .hero span { color: #1ca65a; }
-        .btn { padding: 16px 35px; background: #1ca65a; color: #fff; text-decoration: none; border-radius: 40px; font-weight: 800; margin-top: 30px; transition: 0.4s; display: inline-block; }
-        .btn:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(28,166,90,0.5); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        body { margin: 0; background: #0a0c0b; color: #fff; font-family: 'Montserrat', sans-serif; overflow-x: hidden; animation: fadeIn 1s ease; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: rgba(0,0,0,0.8); position: fixed; width: 90%; z-index: 100; backdrop-filter: blur(10px); }
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: radial-gradient(circle, #132119 0%, #0a0c0b 100%); }
+        .hero h1 { font-size: clamp(40px, 8vw, 72px); font-weight: 800; margin: 0; animation: fadeInUp 1s ease; }
+        .hero span { color: #1ca65a; }
+        .btn { padding: 15px 35px; background: #1ca65a; color: #fff; text-decoration: none; border-radius: 30px; font-weight: 800; transition: 0.3s; border: none; cursor: pointer; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(28,166,90,0.4); }
+
+        /* Ticker Style */
+        .ticker-wrap { position: fixed; bottom: 0; width: 100%; background: #1ca65a; height: 40px; display: flex; align-items: center; z-index: 1000; overflow: hidden; }
+        .ticker-label { background: #000; color: #fff; padding: 0 20px; height: 100%; display: flex; align-items: center; font-weight: 800; font-size: 12px; z-index: 10; position: relative; }
+        .ticker-text { white-space: nowrap; animation: ticker 25s linear infinite; font-weight: 600; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <nav>
         <img src="icmu-logo.png" height="50">
-        <a href="admin.html" class="btn" style="padding:10px 20px; font-size:12px; margin:0;">STAFF LOGIN</a>
+        <a href="admin.html" class="btn" style="font-size:12px;">PORTAL LOGIN</a>
     </nav>
     <section class="hero">
         <h1>THE VOICE OF THE<br><span>GREEN MACHINE</span></h1>
-        <p style="letter-spacing: 2px; color: #8e918f;">OFFICIAL MEDIA UNIT OF ISIPATHANA COLLEGE</p>
-        <a href="#services" class="btn">EXPLORE SERVICES</a>
+        <p style="letter-spacing: 2px; color: #8e918f; font-weight: 600;">ISIPATHANA COLLEGE MEDIA UNIT</p>
+        <a href="admin.html" class="btn">ADMIN ACCESS</a>
     </section>
+
+    <div class="ticker-wrap">
+        <div class="ticker-label">LATEST UPDATES</div>
+        <div class="ticker-text" id="newsTicker">Welcome to the Official ICMU Management System. No recent articles published.</div>
+    </div>
+
+    <script>
+        window.onload = () => {
+            const news = JSON.parse(localStorage.getItem('icmu_news') || '[]');
+            if(news.length > 0) {
+                document.getElementById('newsTicker').innerText = news.map(n => `${n.title} [${n.category}]`).join(' • ');
+            }
+        };
+    </script>
 </body>
 </html>
