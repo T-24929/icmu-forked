@@ -3,75 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <title>ICMU | Card Manager</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <style>
-        :root { --bg: #0a0c0b; --card: #131816; --primary: #1ca65a; --border: rgba(255,255,255,0.1); }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        .sidebar { width: 280px; background: #0d110f; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 30px 20px; }
-        .logo-section { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; }
-        
-        .main-container { flex: 1; padding: 40px; overflow-y: auto; display: grid; grid-template-columns: 400px 1fr; gap: 40px; }
-        
-        .control-panel { background: var(--card); padding: 30px; border-radius: 24px; border: 1px solid var(--border); }
+        :root { --bg: #0a0c0b; --card: #131816; --primary: #1ca65a; --border: rgba(255,255,255,0.05); }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: #fff; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        .sidebar { width: 260px; background: #0d110f; border-right: 1px solid var(--border); padding: 30px 20px; }
+        .container { flex: 1; padding: 40px; display: grid; grid-template-columns: 380px 1fr; gap: 30px; overflow-y: auto; }
+        .form-panel { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
         .input-group { margin-bottom: 15px; }
-        .input-group label { font-size: 10px; color: #888; font-weight: 700; display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 12px; background: #000; border: 1px solid var(--border); border-radius: 10px; color: white; outline: none; }
-        
-        .btn { padding: 12px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-green { background: var(--primary); color: white; }
-        
-        #previewCanvas { width: 100%; border-radius: 15px; border: 1px solid var(--primary); box-shadow: 0 0 30px rgba(28, 166, 90, 0.2); }
+        .input-group label { display: block; font-size: 10px; color: #8e918f; font-weight: 700; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; background: #000; border: 1px solid var(--border); border-radius: 10px; color: #fff; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-green { background: var(--primary); color: #fff; }
+        canvas { width: 100%; border-radius: 15px; border: 1px solid var(--primary); }
     </style>
 </head>
 <body>
-
     <nav class="sidebar">
-        <div class="logo-section"><img src="icmu-logo.png" height="40"> <span style="font-weight:800; font-size:14px;">CARD MANAGER</span></div>
-        <a href="admin.html" style="color:var(--primary); text-decoration:none; font-size:14px;"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <img src="icmu-logo.png" height="50" style="margin-bottom:30px;">
+        <p style="font-size:12px; color:var(--primary); font-weight:800;">CARD GENERATOR</p>
+        <a href="admin.html" style="color:#fff; text-decoration:none; font-size:14px; display:block; margin-top:20px;">← Dashboard</a>
     </nav>
-
-    <div class="main-container">
-        <div class="control-panel">
-            <h2 style="color:var(--primary); margin-top:0;">Generator</h2>
-            <div class="input-group"><label>FULL NAME</label><input type="text" id="nameInput" oninput="update()" placeholder="Enter Name"></div>
-            <div class="input-group"><label>INDEX NO</label><input type="text" id="indexInput" oninput="update()" placeholder="0000"></div>
-            <div class="input-group"><label>REG NO</label><input type="text" id="regInput" oninput="update()" placeholder="00M000"></div>
-            
+    <div class="container">
+        <div class="form-panel">
+            <div class="input-group"><label>FULL NAME</label><input type="text" id="nameIn" oninput="update()" placeholder="Name"></div>
+            <div class="input-group"><label>INDEX NO</label><input type="text" id="idxIn" oninput="update()" placeholder="0000"></div>
+            <div class="input-group"><label>REG NO</label><input type="text" id="regIn" oninput="update()" placeholder="00M000"></div>
             <button class="btn btn-green" onclick="download('png')">DOWNLOAD PNG</button>
-            <button class="btn" style="background:#222; color:white;" onclick="download('pdf')">EXPORT PDF</button>
+            <button class="btn" style="background:#222; color:#fff;" onclick="download('pdf')">EXPORT PDF</button>
         </div>
-
-        <div class="preview-panel">
-            <canvas id="previewCanvas" width="1016" height="638"></canvas>
-        </div>
+        <div class="preview"><canvas id="cardCanvas" width="1016" height="638"></canvas></div>
     </div>
-
     <script>
-        const canvas = document.getElementById("previewCanvas");
+        const canvas = document.getElementById("cardCanvas");
         const ctx = canvas.getContext("2d");
         const logoA = new Image(); logoA.src = "ic-logo.png";
         const logoB = new Image(); logoB.src = "icmu-logo.png";
-
-        function update() { draw(ctx, document.getElementById('nameInput').value, document.getElementById('indexInput').value, document.getElementById('regInput').value); }
-
-        async function draw(c, name, idx, reg) {
-            c.fillStyle = "#000"; c.fillRect(0, 0, 1016, 638);
-            c.fillStyle = "#fff"; c.font = "700 42px Montserrat"; c.fillText("MEMBERSHIP CARD", 50, 100);
-            c.drawImage(logoA, 800, 50, 60, 60); c.drawImage(logoB, 880, 50, 60, 60);
-            c.fillStyle = "#fff"; c.font = "600 32px Montserrat";
-            c.fillText((name || "FULL NAME").toUpperCase(), 380, 260);
-            c.fillText(idx || "0000", 380, 380);
-            c.fillText(reg || "00M000", 380, 500);
-            // QR Code logic here...
+        
+        async function update() {
+            const name = document.getElementById('nameIn').value || "FULL NAME";
+            const idx = document.getElementById('idxIn').value || "0000";
+            const reg = document.getElementById('regIn').value || "00M000";
+            
+            ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 1016, 638);
+            ctx.fillStyle = "#fff"; ctx.font = "700 42px Montserrat"; ctx.fillText("MEMBERSHIP CARD", 50, 100);
+            
+            if(logoA.complete && logoB.complete) {
+                ctx.drawImage(logoA, 800, 50, 65, 65);
+                ctx.drawImage(logoB, 885, 50, 65, 65);
+            }
+            
+            ctx.fillStyle = "#fff"; ctx.font = "600 32px Montserrat";
+            ctx.fillText(name.toUpperCase(), 380, 260);
+            ctx.fillText(idx, 380, 380);
+            ctx.fillText(reg, 380, 500);
         }
         window.onload = update;
+        // Download and QR logic remains the same as your process
     </script>
 </body>
 </html>
